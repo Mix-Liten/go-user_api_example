@@ -15,9 +15,17 @@ import (
 	"time"
 )
 
+type UserController struct {
+	context *echo.Context
+}
+
+func NewUserController() *UserController {
+	return &UserController{}
+}
+
 var userCollection *mongo.Collection = configs.GetCollection(configs.DB, "users")
 
-func CreateUser(c echo.Context) error {
+func (uc UserController) CreateUser(c echo.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	user := &models.UserModel{}
 	defer cancel()

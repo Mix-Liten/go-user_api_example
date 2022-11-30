@@ -6,5 +6,7 @@ import (
 )
 
 func UserRoute(e *echo.Echo) {
-	e.POST("/user", controllers.CreateUser)
+	uc := controllers.UserController{}
+	
+	e.POST("/user", uc.CreateUser)
 }
