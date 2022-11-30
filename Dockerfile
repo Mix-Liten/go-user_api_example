@@ -1,5 +1,5 @@
 # build stage
-FROM golang:latest-alpine as builder
+FROM golang:1.19.3-alpine3.16 as builder
 
 WORKDIR /app
 
@@ -15,5 +15,6 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root
 
 COPY --from=builder /app/main .
+COPY --from=builder /app/.env .
 
 ENTRYPOINT ./main

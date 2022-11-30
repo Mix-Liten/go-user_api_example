@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func verifyEnv() {
+func VerifyEnv() {
 	keys := []string{
 		"APP_PORT",
 		"JWT_SECRET",

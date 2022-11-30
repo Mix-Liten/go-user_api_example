@@ -12,7 +12,11 @@ import (
 var DB *mongo.Client = ConnectDB()
 
 func ConnectDB() *mongo.Client {
-	client, err := mongo.NewClient(options.Client().ApplyURI(EnvMongoURI()))
+	credential := options.Credential{
+		Username: EnvDBUsername(),
+		Password: EnvDBPassword(),
+	}
+	client, err := mongo.NewClient(options.Client().ApplyURI(EnvMongoURI()).SetAuth(credential))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -20,13 +24,13 @@ func ConnectDB() *mongo.Client {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = client.Connect(ctx)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Sprintf("db connect error: %s", err.Error()))
 	}
 
 	// ping the database
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Sprintf("db ping error: %s", err.Error()))
 	}
 
 	fmt.Println("Connected to MongoDB")
@@ -35,6 +39,6 @@ func ConnectDB() *mongo.Client {
 }
 
 func GetCollection(client *mongo.Client, collectionName string) *mongo.Collection {
-	collection := client.Database(ENVProjectName()).Collection(collectionName)
+	collection := client.Database(EnvProjectName()).Collection(collectionName)
 	return collection
 }

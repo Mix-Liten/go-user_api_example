@@ -8,14 +8,21 @@ import (
 	"net/http"
 )
 
+func init() {
+	helpers.VerifyEnv()
+	configs.LoadEnv()
+}
+
 func main() {
 	e := echo.New()
 	e.Validator = helpers.GetValidator()
+
+	configs.ConnectDB()
 
 	routes.UserRoute(e)
 
 	e.GET("/", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, &echo.Map{"data": "Hello, World!"})
 	})
-	e.Logger.Fatal(e.Start(configs.ENVAPPPort()))
+	e.Logger.Fatal(e.Start(configs.EnvAppPort()))
 }

@@ -2,27 +2,41 @@ package configs
 
 import (
 	"fmt"
-	_ "github.com/joho/godotenv/autoload"
+	"github.com/joho/godotenv"
+	"log"
 	"os"
 )
 
-func ENVAPPPort() string {
-	return fmt.Sprintf(":%s", os.Getenv("PROJECT_NAME"))
+func LoadEnv() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(fmt.Sprintf("Error loading .env file: %s", err.Error()))
+	}
 }
 
-func ENVProjectName() string {
-	return fmt.Sprintf(":%s", os.Getenv("PROJECT_NAME"))
+func EnvAppPort() string {
+	return fmt.Sprintf(":%s", os.Getenv("APP_PORT"))
+}
+
+func EnvProjectName() string {
+	return os.Getenv("PROJECT_NAME")
 }
 
 func EnvMongoURI() string {
 	dsn := fmt.Sprintf(
-		"mongodb://%s:%s@%s:%s/%s?retryWrites=true&w=majority",
-		os.Getenv("DB_USERNAME"),
-		os.Getenv("DB_PASSWORD"),
+		"mongodb://%s:%s/%s?retryWrites=true&w=majority",
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
 		os.Getenv("DB_DATABASE"),
 	)
 
 	return dsn
+}
+
+func EnvDBUsername() string {
+	return os.Getenv("DB_USERNAME")
+}
+
+func EnvDBPassword() string {
+	return os.Getenv("DB_PASSWORD")
 }
