@@ -4,8 +4,8 @@ services:
   db:
     image: mongo:latest
     container_name: mongodb
-    restart: unless-stopped
-#    restart: always
+#    restart: unless-stopped
+    restart: always
     command: [ "mongod", "--quiet", "--logpath", "/dev/null" ]
     environment:
       MONGO_INITDB_DATABASE: admin

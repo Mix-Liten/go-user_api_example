@@ -18,6 +18,7 @@ func main() {
 	e.Validator = helpers.GetValidator()
 
 	configs.ConnectDB()
+	defer configs.DisConnectDB()
 
 	routes.UserRoute(e)
 

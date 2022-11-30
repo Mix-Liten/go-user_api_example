@@ -10,6 +10,7 @@ import (
 )
 
 var DB *mongo.Client = ConnectDB()
+var cc *context.Context
 
 func ConnectDB() *mongo.Client {
 	credential := options.Credential{
@@ -33,6 +34,8 @@ func ConnectDB() *mongo.Client {
 		log.Fatal(fmt.Sprintf("db ping error: %s", err.Error()))
 	}
 
+	cc = &ctx
+
 	fmt.Println("Connected to MongoDB")
 
 	return client
@@ -41,4 +44,9 @@ func ConnectDB() *mongo.Client {
 func GetCollection(client *mongo.Client, collectionName string) *mongo.Collection {
 	collection := client.Database(EnvProjectName()).Collection(collectionName)
 	return collection
+}
+
+func DisConnectDB() error {
+	err := DB.Disconnect(*cc)
+	return err
 }
