@@ -3,7 +3,14 @@ package responses
 import "github.com/labstack/echo/v4"
 
 type UserResponse struct {
-	Status  int       `json:"status"`
-	Message string    `json:"message,omitempty"`
-	Data    *echo.Map `json:"data"`
+	BaseResponse
+	Data *echo.Map `json:"data"`
 }
+
+//type createUser struct {
+//	FirstName string   `json:"firstname"`
+//	LastName  string   `json:"lastname"`
+//	Email     string   `json:"email"`
+//	Birth     string   `json:"birth"`
+//	Languages []string `json:"languages"`
+//}

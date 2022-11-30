@@ -30,59 +30,60 @@ func (uc UserController) CreateUser(c echo.Context) error {
 	user := &models.UserModel{}
 	defer cancel()
 
+	er := &responses.ErrorResponse{
+		Data: &echo.Map{},
+	}
+
 	if err := c.Bind(&user); err != nil {
-		return c.JSON(
-			http.StatusBadRequest,
-			responses.UserResponse{
-				Status:  http.StatusBadRequest,
-				Message: "error",
-				Data:    &echo.Map{"data": err.Error()},
-			})
+		er.Status = http.StatusBadRequest
+		er.Message = "error"
+		er.Data = &echo.Map{"error": err.Error()}
+		return c.JSON(http.StatusBadRequest, er)
 	}
 
 	if err := c.Validate(user); err != nil {
-		return c.JSON(
-			http.StatusBadRequest,
-			responses.UserResponse{
-				Status:  http.StatusBadRequest,
-				Message: "error",
-				Data:    &echo.Map{"data": err.Error()},
-			})
+		er.Status = http.StatusBadRequest
+		er.Message = "error"
+		er.Data = &echo.Map{"error": err.Error()}
+		return c.JSON(http.StatusBadRequest, er)
 	}
 
 	tx, _ := findUser(user)
 	if tx.Email != "" {
-		return c.JSON(
-			http.StatusBadRequest,
-			responses.UserResponse{
-				Status:  http.StatusBadRequest,
-				Message: "The email has already been taken",
-				Data:    &echo.Map{},
-			})
+		er.Status = http.StatusBadRequest
+		er.Message = "The email has already been taken"
+		return c.JSON(http.StatusBadRequest, er)
 	}
 
 	hash, _ := helpers.HashPassword(user.Password)
 	user.Password = hash
 
-	result, err := userCollection.InsertOne(ctx, user)
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = user.CreatedAt
+
+	_, err := userCollection.InsertOne(ctx, user)
 
 	if err != nil {
-		return c.JSON(
-			http.StatusInternalServerError,
-			responses.UserResponse{
-				Status:  http.StatusInternalServerError,
-				Message: "error",
-				Data:    &echo.Map{"data": err.Error()},
-			})
+		er.Status = http.StatusInternalServerError
+		er.Message = "error"
+		er.Data = &echo.Map{"error": err.Error()}
+		return c.JSON(http.StatusInternalServerError, er)
 	}
 
-	return c.JSON(
-		http.StatusCreated,
-		responses.UserResponse{
-			Status:  http.StatusCreated,
-			Message: "success",
-			Data:    &echo.Map{"data": result},
-		})
+	ud, _ := findUser(user)
+
+	ur := &responses.UserResponse{}
+	ur.Status = http.StatusCreated
+	ur.Message = "success"
+	ur.Data = &echo.Map{"user": &echo.Map{
+		"firstName": ud.FirstName,
+		"lastName":  ud.LastName,
+		"email":     ud.Email,
+		"birth":     ud.Birth,
+		"languages": ud.Languages,
+	}}
+
+	return c.JSON(http.StatusCreated, ur)
 }
 
 func findUser(user *models.UserModel) (models.UserModel, error) {
