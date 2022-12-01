@@ -1,23 +1,24 @@
-package configs
+package database
 
 import (
 	"context"
 	"fmt"
+	"go-user_api_example/configs"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"time"
 )
 
-var DB *mongo.Client = ConnectDB()
+var db *mongo.Client
 var cc *context.Context
 
 func ConnectDB() *mongo.Client {
 	credential := options.Credential{
-		Username: EnvDBUsername(),
-		Password: EnvDBPassword(),
+		Username: configs.EnvDBUsername(),
+		Password: configs.EnvDBPassword(),
 	}
-	client, err := mongo.NewClient(options.Client().ApplyURI(EnvMongoURI()).SetAuth(credential))
+	client, err := mongo.NewClient(options.Client().ApplyURI(configs.EnvMongoURI()).SetAuth(credential))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,6 +35,7 @@ func ConnectDB() *mongo.Client {
 		log.Fatal(fmt.Sprintf("db ping error: %s", err.Error()))
 	}
 
+	db = client
 	cc = &ctx
 
 	fmt.Println("Connected to MongoDB")
@@ -42,11 +44,15 @@ func ConnectDB() *mongo.Client {
 }
 
 func GetCollection(client *mongo.Client, collectionName string) *mongo.Collection {
-	collection := client.Database(EnvProjectName()).Collection(collectionName)
+	collection := client.Database(configs.EnvProjectName()).Collection(collectionName)
 	return collection
 }
 
+func GetDB() *mongo.Client {
+	return db
+}
+
 func DisConnectDB() error {
-	err := DB.Disconnect(*cc)
+	err := db.Disconnect(*cc)
 	return err
 }

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"go-user_api_example/configs"
+	"go-user_api_example/configs/database"
 	"go-user_api_example/helpers"
 	"go-user_api_example/models"
 	"go-user_api_example/responses"
@@ -23,7 +23,11 @@ func NewUserController() *UserController {
 	return &UserController{}
 }
 
-var userCollection *mongo.Collection = configs.GetCollection(configs.DB, "users")
+func getUserCollection() *mongo.Collection {
+	return database.GetCollection(database.GetDB(), "users")
+}
+
+//var userCollection *mongo.Collection = database.GetCollection(database.GetDB(), "users")
 
 func (uc UserController) CreateUser(c echo.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -61,7 +65,7 @@ func (uc UserController) CreateUser(c echo.Context) error {
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = user.CreatedAt
 
-	_, err := userCollection.InsertOne(ctx, user)
+	_, err := getUserCollection().InsertOne(ctx, user)
 
 	if err != nil {
 		er.Status = http.StatusInternalServerError
@@ -89,7 +93,7 @@ func (uc UserController) CreateUser(c echo.Context) error {
 func findUser(user *models.UserModel) (models.UserModel, error) {
 	filter := bson.M{"email": user.Email}
 	result := models.UserModel{}
-	err := userCollection.FindOne(context.Background(), filter).Decode(&result)
+	err := getUserCollection().FindOne(context.Background(), filter).Decode(&result)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return models.UserModel{}, nil
