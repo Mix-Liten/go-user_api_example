@@ -2,7 +2,6 @@ package responses
 
 import "github.com/labstack/echo/v4"
 
-type ErrorResponse struct {
-	BaseResponse
-	Data *echo.Map `json:"data"`
+func ErrorResponseJson(code int, data *echo.Map, message string, c echo.Context) error {
+	return BaseResponseJson(code, data, message, false, c)
 }
