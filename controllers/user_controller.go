@@ -27,36 +27,22 @@ func getUserCollection() *mongo.Collection {
 	return database.GetCollection(database.GetDB(), "users")
 }
 
-//var userCollection *mongo.Collection = database.GetCollection(database.GetDB(), "users")
-
 func (uc UserController) CreateUser(c echo.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	user := &models.UserModel{}
 	defer cancel()
 
-	er := &responses.ErrorResponse{
-		Data: &echo.Map{},
-	}
-
 	if err := c.Bind(&user); err != nil {
-		er.Status = http.StatusBadRequest
-		er.Message = "error"
-		er.Data = &echo.Map{"error": err.Error()}
-		return c.JSON(http.StatusBadRequest, er)
+		return responses.ErrorResponseJson(http.StatusBadRequest, &echo.Map{"error": err.Error()}, "error", c)
 	}
 
 	if err := c.Validate(user); err != nil {
-		er.Status = http.StatusBadRequest
-		er.Message = "error"
-		er.Data = &echo.Map{"error": err.Error()}
-		return c.JSON(http.StatusBadRequest, er)
+		return responses.ErrorResponseJson(http.StatusBadRequest, &echo.Map{"error": err.Error()}, "error", c)
 	}
 
 	tx, _ := findUser(user)
 	if tx.Email != "" {
-		er.Status = http.StatusBadRequest
-		er.Message = "The email has already been taken"
-		return c.JSON(http.StatusBadRequest, er)
+		return responses.ErrorResponseJson(http.StatusBadRequest, &echo.Map{}, "The email has already been taken", c)
 	}
 
 	hash, _ := helpers.HashPassword(user.Password)
@@ -68,26 +54,12 @@ func (uc UserController) CreateUser(c echo.Context) error {
 	_, err := getUserCollection().InsertOne(ctx, user)
 
 	if err != nil {
-		er.Status = http.StatusInternalServerError
-		er.Message = "error"
-		er.Data = &echo.Map{"error": err.Error()}
-		return c.JSON(http.StatusInternalServerError, er)
+		return responses.ErrorResponseJson(http.StatusInternalServerError, &echo.Map{"error": err.Error()}, "error", c)
 	}
 
 	ud, _ := findUser(user)
 
-	ur := &responses.UserResponse{}
-	ur.Status = http.StatusCreated
-	ur.Message = "success"
-	ur.Data = &echo.Map{"user": &echo.Map{
-		"firstName": ud.FirstName,
-		"lastName":  ud.LastName,
-		"email":     ud.Email,
-		"birth":     ud.Birth,
-		"languages": ud.Languages,
-	}}
-
-	return c.JSON(http.StatusCreated, ur)
+	return responses.UserResponseJson(http.StatusCreated, ud, "success", c)
 }
 
 func findUser(user *models.UserModel) (models.UserModel, error) {
