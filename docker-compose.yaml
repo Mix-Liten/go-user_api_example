@@ -17,6 +17,10 @@ services:
       - mongodb:/data/db
 
   server-app:
+    image: cosmtrek/air
+    working_dir: /app
+    volumes:
+      - ./:/app/
     container_name: api-server
     build: .
     restart: always
