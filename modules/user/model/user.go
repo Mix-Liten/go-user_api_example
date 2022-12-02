@@ -1,8 +1,11 @@
-package models
+package model
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go-user_api_example/modules/common/model"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
-type UserModel struct {
+type User struct {
 	Id        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	FirstName string             `json:"firstname" bson:"firstname"`
 	LastName  string             `json:"lastname" bson:"lastname"`
@@ -10,5 +13,5 @@ type UserModel struct {
 	Email     string             `json:"email" bson:"email" validate:"required,email"`
 	Birth     string             `json:"birth" bson:"birth"`
 	Languages []string           `json:"languages" bson:"languages"`
-	BaseModel
+	model.Base
 }

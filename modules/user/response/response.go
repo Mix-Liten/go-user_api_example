@@ -1,9 +1,10 @@
-package responses
+package response
 
 import (
 	"github.com/labstack/echo/v4"
 	"go-user_api_example/helpers"
-	"go-user_api_example/models"
+	"go-user_api_example/modules/common/response"
+	"go-user_api_example/modules/user/model"
 )
 
 type UserPublic struct {
@@ -14,7 +15,7 @@ type UserPublic struct {
 	Languages []string `json:"languages"`
 }
 
-func UserResponseJson(code int, data models.UserModel, message string, c echo.Context) error {
+func UserResponseJson(code int, data model.User, message string, c echo.Context) error {
 	up := &UserPublic{
 		FirstName: data.FirstName,
 		LastName:  data.LastName,
@@ -23,5 +24,5 @@ func UserResponseJson(code int, data models.UserModel, message string, c echo.Co
 		Languages: data.Languages,
 	}
 
-	return BaseResponseJson(code, helpers.StructToMap(up), message, true, c)
+	return response.BaseResponseJson(code, helpers.StructToMap(up), message, true, c)
 }

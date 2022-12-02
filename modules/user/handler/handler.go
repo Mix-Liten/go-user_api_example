@@ -1,4 +1,4 @@
-package controllers
+package handler
 
 import (
 	"context"
@@ -7,42 +7,43 @@ import (
 	"github.com/labstack/echo/v4"
 	"go-user_api_example/configs/database"
 	"go-user_api_example/helpers"
-	"go-user_api_example/models"
-	"go-user_api_example/responses"
+	commonResponse "go-user_api_example/modules/common/response"
+	"go-user_api_example/modules/user/model"
+	"go-user_api_example/modules/user/response"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
 	"time"
 )
 
-type UserController struct {
+type UserHandler struct {
 	context *echo.Context
 }
 
-func NewUserController() *UserController {
-	return &UserController{}
+func NewUserController() *UserHandler {
+	return &UserHandler{}
 }
 
 func getUserCollection() *mongo.Collection {
 	return database.GetCollection(database.GetDB(), "users")
 }
 
-func (uc UserController) CreateUser(c echo.Context) error {
+func (uc UserHandler) CreateUser(c echo.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	user := &models.UserModel{}
+	user := &model.User{}
 	defer cancel()
 
 	if err := c.Bind(&user); err != nil {
-		return responses.ErrorResponseJson(http.StatusUnprocessableEntity, &echo.Map{"error": err.Error()}, "error", c)
+		return commonResponse.ErrorResponseJson(http.StatusUnprocessableEntity, &echo.Map{"error": err.Error()}, "error", c)
 	}
 
 	if err := c.Validate(&user); err != nil {
-		return responses.ErrorResponseJson(http.StatusBadRequest, &echo.Map{"error": err.Error()}, "error", c)
+		return commonResponse.ErrorResponseJson(http.StatusBadRequest, &echo.Map{"error": err.Error()}, "error", c)
 	}
 
 	tx, _ := findUser(user)
 	if tx.Email != "" {
-		return responses.ErrorResponseJson(http.StatusConflict, &echo.Map{}, "The email has already been taken", c)
+		return commonResponse.ErrorResponseJson(http.StatusConflict, &echo.Map{}, "The email has already been taken", c)
 	}
 
 	hash, _ := helpers.HashPassword(user.Password)
@@ -54,24 +55,24 @@ func (uc UserController) CreateUser(c echo.Context) error {
 	_, err := getUserCollection().InsertOne(ctx, user)
 
 	if err != nil {
-		return responses.ErrorResponseJson(http.StatusInternalServerError, &echo.Map{"error": err.Error()}, "error", c)
+		return commonResponse.ErrorResponseJson(http.StatusInternalServerError, &echo.Map{"error": err.Error()}, "error", c)
 	}
 
 	ud, _ := findUser(user)
 
-	return responses.UserResponseJson(http.StatusCreated, ud, "success", c)
+	return response.UserResponseJson(http.StatusCreated, ud, "success", c)
 }
 
-func findUser(user *models.UserModel) (models.UserModel, error) {
+func findUser(user *model.User) (model.User, error) {
 	filter := bson.M{"email": user.Email}
-	result := models.UserModel{}
+	result := model.User{}
 	err := getUserCollection().FindOne(context.Background(), filter).Decode(&result)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return models.UserModel{}, nil
+			return model.User{}, nil
 		}
 
-		return models.UserModel{}, fmt.Errorf("finding user: %w", err)
+		return model.User{}, fmt.Errorf("finding user: %w", err)
 	}
 
 	return result, nil
