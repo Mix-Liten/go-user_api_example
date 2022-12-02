@@ -15,3 +15,14 @@ type User struct {
 	Languages []string           `json:"languages" bson:"languages"`
 	model.Base
 }
+
+type UserPublic struct {
+	Id        primitive.ObjectID `json:"id"`
+	FirstName string             `json:"firstname"`
+	LastName  string             `json:"lastname"`
+	Email     string             `json:"email"`
+	Birth     string             `json:"birth"`
+	Languages []string           `json:"languages"`
+}
+
+type Users []UserPublic

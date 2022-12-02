@@ -9,6 +9,7 @@ import (
 	"go-user_api_example/helpers"
 	commonResponse "go-user_api_example/modules/common/response"
 	"go-user_api_example/modules/user/model"
+	"go-user_api_example/modules/user/repository"
 	"go-user_api_example/modules/user/response"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -17,18 +18,20 @@ import (
 )
 
 type UserHandler struct {
-	context *echo.Context
+	ur repository.UserRepository
 }
 
-func NewUserController() *UserHandler {
-	return &UserHandler{}
+func NewUserHandler(userRepository repository.UserRepository) *UserHandler {
+	return &UserHandler{
+		ur: userRepository,
+	}
 }
 
 func getUserCollection() *mongo.Collection {
 	return database.GetCollection(database.GetDB(), "users")
 }
 
-func (uc UserHandler) CreateUser(c echo.Context) error {
+func (ur UserHandler) CreateUser(c echo.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	user := &model.User{}
 	defer cancel()
