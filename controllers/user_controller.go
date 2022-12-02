@@ -33,16 +33,16 @@ func (uc UserController) CreateUser(c echo.Context) error {
 	defer cancel()
 
 	if err := c.Bind(&user); err != nil {
-		return responses.ErrorResponseJson(http.StatusBadRequest, &echo.Map{"error": err.Error()}, "error", c)
+		return responses.ErrorResponseJson(http.StatusUnprocessableEntity, &echo.Map{"error": err.Error()}, "error", c)
 	}
 
-	if err := c.Validate(user); err != nil {
+	if err := c.Validate(&user); err != nil {
 		return responses.ErrorResponseJson(http.StatusBadRequest, &echo.Map{"error": err.Error()}, "error", c)
 	}
 
 	tx, _ := findUser(user)
 	if tx.Email != "" {
-		return responses.ErrorResponseJson(http.StatusBadRequest, &echo.Map{}, "The email has already been taken", c)
+		return responses.ErrorResponseJson(http.StatusConflict, &echo.Map{}, "The email has already been taken", c)
 	}
 
 	hash, _ := helpers.HashPassword(user.Password)
