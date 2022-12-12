@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"context"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"go-user_api_example/configs/database"
 	"go-user_api_example/helpers"
@@ -15,12 +15,12 @@ import (
 )
 
 type UserHandler struct {
-	ur repository.UserRepository
+	urCase repository.UserRepository
 }
 
 func NewUserHandler(userRepository repository.UserRepository) *UserHandler {
 	return &UserHandler{
-		ur: userRepository,
+		urCase: userRepository,
 	}
 }
 
@@ -29,9 +29,7 @@ func getUserCollection() *mongo.Collection {
 }
 
 func (uh UserHandler) CreateUser(c echo.Context) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	user := &model.User{}
-	defer cancel()
 
 	if err := c.Bind(&user); err != nil {
 		return commonResponse.ErrorResponseJson(http.StatusUnprocessableEntity, &echo.Map{"error": err.Error()}, "error", c)
@@ -41,7 +39,7 @@ func (uh UserHandler) CreateUser(c echo.Context) error {
 		return commonResponse.ErrorResponseJson(http.StatusBadRequest, &echo.Map{"error": err.Error()}, "error", c)
 	}
 
-	tx, _ := uh.ur.FindByEmail(user.Email)
+	tx, _ := uh.urCase.FindByEmail(user.Email)
 	if tx.Email != "" {
 		return commonResponse.ErrorResponseJson(http.StatusConflict, &echo.Map{}, "The email has already been taken", c)
 	}
@@ -52,13 +50,26 @@ func (uh UserHandler) CreateUser(c echo.Context) error {
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = user.CreatedAt
 
-	_, err := getUserCollection().InsertOne(ctx, user)
+	err := uh.urCase.Save(user)
 
 	if err != nil {
 		return commonResponse.ErrorResponseJson(http.StatusInternalServerError, &echo.Map{"error": err.Error()}, "error", c)
 	}
 
-	ud, _ := uh.ur.FindByEmail(user.Email)
+	ud, _ := uh.urCase.FindByEmail(user.Email)
 
 	return response.UserResponseJson(http.StatusCreated, ud, "success", c)
+}
+
+func (uh UserHandler) GetUser(c echo.Context) error {
+	userID := c.Param("userId")
+
+	user, err := uh.urCase.FindByID(userID)
+
+	if err != nil {
+		fmt.Println(err)
+		return commonResponse.ErrorResponseJson(http.StatusNotFound, &echo.Map{"error": err.Error()}, "user not found", c)
+	}
+
+	return response.UserResponseJson(http.StatusCreated, user, "success", c)
 }
