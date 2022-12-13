@@ -12,4 +12,8 @@ func UserRoute(e *echo.Echo) {
 	uh := handler.NewUserHandler(ur)
 
 	e.POST("/user", uh.CreateUser)
+	e.GET("/user/:userID", uh.GetUser)
+	e.PUT("/user/:userID", uh.EditUser)
+	e.DELETE("/user/:userID", uh.DeleteUser)
+	e.GET("/users", uh.GetAllUser)
 }
