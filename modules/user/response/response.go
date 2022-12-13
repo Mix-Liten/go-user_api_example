@@ -18,3 +18,9 @@ func UserResponseJson(code int, data *model.UserPublic, message string, c echo.C
 
 	return response.BaseResponseJson(code, up, message, true, c)
 }
+
+func UsersResponseJson(code int, data *model.Users, message string, c echo.Context) error {
+	us := helpers.StructToMap(&data)
+
+	return response.BaseResponseJson(code, us, message, true, c)
+}

@@ -62,7 +62,7 @@ func (uh UserHandler) CreateUser(c echo.Context) error {
 }
 
 func (uh UserHandler) GetUser(c echo.Context) error {
-	userID := c.Param("userId")
+	userID := c.Param("userID")
 
 	user, err := uh.urCase.FindByID(userID)
 
@@ -71,5 +71,51 @@ func (uh UserHandler) GetUser(c echo.Context) error {
 		return commonResponse.ErrorResponseJson(http.StatusNotFound, &echo.Map{"error": err.Error()}, "user not found", c)
 	}
 
-	return response.UserResponseJson(http.StatusCreated, user, "success", c)
+	return response.UserResponseJson(http.StatusOK, user, "success", c)
+}
+
+func (uh UserHandler) EditUser(c echo.Context) error {
+	user := &model.User{}
+	userID := c.Param("userID")
+
+	if err := c.Bind(&user); err != nil {
+		return commonResponse.ErrorResponseJson(http.StatusUnprocessableEntity, &echo.Map{"error": err.Error()}, "error", c)
+	}
+
+	if err := c.Validate(&user); err != nil {
+		return commonResponse.ErrorResponseJson(http.StatusBadRequest, &echo.Map{"error": err.Error()}, "error", c)
+	}
+
+	err := uh.urCase.Update(userID, user)
+
+	if err != nil {
+		fmt.Println(err)
+		return commonResponse.ErrorResponseJson(http.StatusNotFound, &echo.Map{"error": err.Error()}, "user update failed", c)
+	}
+
+	return response.UserResponseJson(http.StatusOK, nil, "success", c)
+}
+
+func (uh UserHandler) DeleteUser(c echo.Context) error {
+	userID := c.Param("userID")
+
+	err := uh.urCase.Delete(userID)
+
+	if err != nil {
+		fmt.Println(err)
+		return commonResponse.ErrorResponseJson(http.StatusNotFound, &echo.Map{"error": err.Error()}, "user delete failed", c)
+	}
+
+	return response.UserResponseJson(http.StatusOK, nil, "success", c)
+}
+
+func (uh UserHandler) GetAllUser(c echo.Context) error {
+	users, err := uh.urCase.FindAll()
+
+	if err != nil {
+		fmt.Println(err)
+		return commonResponse.ErrorResponseJson(http.StatusNotFound, &echo.Map{"error": err.Error()}, "users not found", c)
+	}
+
+	return response.UsersResponseJson(http.StatusOK, &users, "success", c)
 }
