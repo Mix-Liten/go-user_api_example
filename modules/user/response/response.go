@@ -8,7 +8,12 @@ import (
 )
 
 func UserResponseJson(code int, data *model.UserPublic, message string, c echo.Context) error {
+	if data == nil {
+		return response.BaseResponseJson(code, nil, message, true, c)
+	}
+
 	up := helpers.StructToMap(&model.UserPublic{
+		ID:        data.ID,
 		FirstName: data.FirstName,
 		LastName:  data.LastName,
 		Email:     data.Email,
@@ -20,7 +25,7 @@ func UserResponseJson(code int, data *model.UserPublic, message string, c echo.C
 }
 
 func UsersResponseJson(code int, data *model.Users, message string, c echo.Context) error {
-	us := helpers.StructToMap(&data)
+	us := &echo.Map{"users": *data}
 
 	return response.BaseResponseJson(code, us, message, true, c)
 }

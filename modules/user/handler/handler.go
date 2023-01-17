@@ -11,7 +11,6 @@ import (
 	"go-user_api_example/modules/user/response"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
-	"time"
 )
 
 type UserHandler struct {
@@ -35,20 +34,17 @@ func (uh UserHandler) CreateUser(c echo.Context) error {
 		return commonResponse.ErrorResponseJson(http.StatusUnprocessableEntity, &echo.Map{"error": err.Error()}, "error", c)
 	}
 
-	if err := c.Validate(&user); err != nil {
+	if err := c.Validate(user); err != nil {
 		return commonResponse.ErrorResponseJson(http.StatusBadRequest, &echo.Map{"error": err.Error()}, "error", c)
 	}
 
 	tx, _ := uh.urCase.FindByEmail(user.Email)
-	if tx.Email != "" {
+	if tx != nil {
 		return commonResponse.ErrorResponseJson(http.StatusConflict, &echo.Map{}, "The email has already been taken", c)
 	}
 
 	hash, _ := helpers.HashPassword(user.Password)
 	user.Password = hash
-
-	user.CreatedAt = time.Now()
-	user.UpdatedAt = user.CreatedAt
 
 	err := uh.urCase.Save(user)
 
@@ -68,7 +64,7 @@ func (uh UserHandler) GetUser(c echo.Context) error {
 
 	if err != nil {
 		fmt.Println(err)
-		return commonResponse.ErrorResponseJson(http.StatusNotFound, &echo.Map{"error": err.Error()}, "user not found", c)
+		return commonResponse.ErrorResponseJson(http.StatusNotFound, &echo.Map{"error": err.Error()}, "no content", c)
 	}
 
 	return response.UserResponseJson(http.StatusOK, user, "success", c)
@@ -114,7 +110,7 @@ func (uh UserHandler) GetAllUser(c echo.Context) error {
 
 	if err != nil {
 		fmt.Println(err)
-		return commonResponse.ErrorResponseJson(http.StatusNotFound, &echo.Map{"error": err.Error()}, "users not found", c)
+		return commonResponse.ErrorResponseJson(http.StatusNoContent, &echo.Map{"error": err.Error()}, "no content", c)
 	}
 
 	return response.UsersResponseJson(http.StatusOK, &users, "success", c)

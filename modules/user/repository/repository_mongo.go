@@ -25,6 +25,9 @@ func (r *userRepositoryMongo) Save(user *model.User) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = user.CreatedAt
+
 	_, err := r.collection.InsertOne(ctx, user)
 
 	return err
@@ -89,7 +92,7 @@ func (r *userRepositoryMongo) FindAll() (model.Users, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var users model.Users
+	users := []model.UserPublic{}
 
 	results, err := r.collection.Find(ctx, bson.M{})
 
