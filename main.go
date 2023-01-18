@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"go-user_api_example/configs"
 	"go-user_api_example/configs/database"
 	"go-user_api_example/helpers"
@@ -16,6 +17,11 @@ func init() {
 
 func main() {
 	e := echo.New()
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowHeaders: []string{"*"},
+	}))
 	e.Validator = helpers.GetValidator()
 
 	database.ConnectDB()

@@ -110,11 +110,11 @@ func (r *userRepositoryMongo) FindByID(userID string) (*model.UserPublic, error)
 	return &user, nil
 }
 
-func (r *userRepositoryMongo) FindByEmail(userEmail string) (*model.UserPublic, error) {
+func (r *userRepositoryMongo) FindByEmail(userEmail string) (*model.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var user model.UserPublic
+	var user model.User
 
 	err := r.collection.FindOne(ctx, bson.M{"email": userEmail}).Decode(&user)
 
