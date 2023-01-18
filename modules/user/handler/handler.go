@@ -78,10 +78,6 @@ func (uh UserHandler) EditUser(c echo.Context) error {
 		return commonResponse.ErrorResponseJson(http.StatusUnprocessableEntity, &echo.Map{"error": err.Error()}, "error", c)
 	}
 
-	if err := c.Validate(&user); err != nil {
-		return commonResponse.ErrorResponseJson(http.StatusBadRequest, &echo.Map{"error": err.Error()}, "error", c)
-	}
-
 	err := uh.urCase.Update(userID, user)
 
 	if err != nil {

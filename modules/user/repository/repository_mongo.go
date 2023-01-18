@@ -2,11 +2,14 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"go-user_api_example/configs/database"
+	"go-user_api_example/helpers"
 	"go-user_api_example/modules/user/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"net/mail"
 	"time"
 )
 
@@ -37,10 +40,44 @@ func (r *userRepositoryMongo) Update(userID string, user *model.User) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	update := map[string]interface{}{}
+
+	if user.FirstName != "" {
+		update["firstname"] = user.FirstName
+	}
+	if user.LastName != "" {
+		update["lastname"] = user.LastName
+	}
+	if user.Email != "" {
+		if _, err := mail.ParseAddress(user.Email); err != nil {
+			return err
+		}
+		update["email"] = user.Email
+	}
+	if len(user.Languages) != 0 {
+		var ul []string
+		for _, language := range user.Languages {
+			ul = append(ul, language)
+		}
+
+		update["languages"] = ul
+	}
+	if user.Password != "" {
+		if len(user.Password) < 8 {
+			return errors.New("password need at least 8 characters")
+		}
+		hash, _ := helpers.HashPassword(user.Password)
+		update["password"] = hash
+	}
+
+	if len(update) == 0 {
+		return errors.New("no valid content")
+	}
+
 	user.UpdatedAt = time.Now()
 	objId, _ := primitive.ObjectIDFromHex(userID)
 
-	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": objId}, user)
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": objId}, bson.D{{"$set", update}})
 
 	return err
 }
